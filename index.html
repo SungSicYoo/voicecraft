@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <title>VoiceCraft | Premium Free TTS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VoiceCraft는 회원가입이나 복잡한 설정 없이 누구나 평생 무료로 한국어, 영어, 일본어 등 다양한 언어의 고품질 텍스트 음성 변환(TTS)을 이용할 수 있는 프리미엄 스튜디오입니다.">
+  <meta name="keywords" content="무료 TTS, 텍스트 음성 변환, text to speech, 무료 더빙, 음성 합성, VoiceCraft, AI 성우">
+  <meta property="og:title" content="VoiceCraft | 세상에서 가장 쉬운 무료 텍스트 음성 변환(TTS)">
+  <meta property="og:description" content="글자 수 제한 없이 누구나 고품질 오디오를 무료로 생성하고 MP3로 다운로드하세요.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -368,11 +372,27 @@
       font-size: 0.8rem;
       color: var(--text-muted);
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      align-items: center;
       width: 100%;
       max-width: 800px;
       padding-top: 24px;
       border-top: 1px solid var(--border);
+    }
+    footer .legal-links {
+      margin-bottom: 16px;
+    }
+    footer .legal-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin: 0 10px;
+      transition: color 0.2s;
+    }
+    footer .legal-links a:hover { color: var(--primary); }
+    footer .copyright-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
     }
 
     @media (max-width: 600px) {
@@ -389,7 +409,7 @@
   <div class="bg-blob two"></div>
 
   <header>
-    <div class="logo">Voice<em>Craft</em></div>
+    <h1 class="logo">Voice<em>Craft</em></h1>
     <span class="badge">Pro TTS Studio</span>
   </header>
 
@@ -458,11 +478,36 @@
       <div class="progress"><div class="progress-bar" id="progress-fill"></div></div>
       <div class="status" id="status">텍스트를 입력하고 실행 버튼을 누르세요.</div>
     </div>
+
+    <!-- Card 4: About / Content for SEO & AdSense -->
+    <section class="card about-section" style="margin-top: 20px;">
+      <h2 style="font-size: 1.2rem; color: var(--primary); margin-bottom: 16px;">텍스트 음성 변환의 새로운 기준, VoiceCraft</h2>
+      <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px;">
+        VoiceCraft는 누구나 복잡한 프로그램 설치나 로그인 없이 웹에서 바로 텍스트를 오디오로 변환할 수 있는 <strong>프리미엄 무료 TTS(Text-to-Speech) 서비스</strong>입니다. 유튜브 영상 제작, 팟캐스트 더빙, 오디오북 제작, 혹은 시각 장애인 접근성을 위한 문서 낭독 등 여러분의 다양한 창작과 업무 효율성을 돕기 위해 설계되었습니다.
+      </p>
+      <h3 style="font-size: 1.05rem; margin-bottom: 12px; color: var(--text-main);">언어 장벽 없는 다국어 지원</h3>
+      <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px;">
+        빠르고 명확한 한국어(Korean)는 물론 영어, 일본어, 중국어 등 필수 다국어를 지원합니다. 기존 서비스들의 답답했던 글자 수 제한에서 벗어나, 긴 대본이나 장문의 텍스트 파일(.txt)을 손쉽게 한 번에 MP3 오디오 파일로 합성하여 언제 어디서든 활용해 보세요.
+      </p>
+      <h3 style="font-size: 1.05rem; margin-bottom: 12px; color: var(--text-main);">어떻게 사용하나요?</h3>
+      <ol style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.7; margin-left: 20px;">
+        <li style="margin-bottom: 6px;">상단의 텍스트 입력창에 직접 타이핑하거나, 미리 작성된 <code>.txt</code> 파일을 업로드 탭을 통해 불러옵니다.</li>
+        <li style="margin-bottom: 6px;">원하는 언어(Language)와 음성 톤(Voice)을 선택합니다.</li>
+        <li style="margin-bottom: 6px;">'실행(Generate Audio)' 버튼을 눌러 결과물을 미리 들어보고, 만족스럽다면 '다운로드' 버튼으로 기기에 영구 저장합니다.</li>
+      </ol>
+    </section>
   </main>
 
   <footer>
-    <span>VoiceCraft · Free High-Quality TTS</span>
-    <span>Powered by Cloudflare Pages</span>
+    <div class="legal-links">
+      <a href="#">서비스 이용약관</a>
+      <a href="#" style="font-weight: 600;">개인정보처리방침</a>
+      <a href="#">고객센터 및 문의</a>
+    </div>
+    <div class="copyright-row">
+      <span>© 2026 VoiceCraft · Free High-Quality TTS</span>
+      <span>Powered by Cloudflare Pages</span>
+    </div>
   </footer>
 
 <script>
