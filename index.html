@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceCraft — 고품질 한국어 TTS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── Variables ─── */
+:root {
+  --bg:        #f5f2ee;
+  --surface:   #ffffff;
+  --card:      #ffffff;
+  --border:    #e2ddd6;
+  --border2:   #ccc8be;
+  --ink:       #1a1814;
+  --ink2:      #5a5650;
+  --ink3:      #9a9690;
+  --accent:    #c84b2f;
+  --accent2:   #e05c3a;
+  --accent-bg: #fdf0ec;
+  --green:     #2d7a4f;
+  --radius:    10px;
+  --shadow:    0 2px 12px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Noto Serif KR', serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 80px;
+}
+
+/* ─── Page grain overlay ─── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ─── Header ─── */
+.site-header {
+  width: 100%;
+  max-width: 740px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 0 28px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 36px;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+.logo em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.badge {
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  background: var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+
+/* ─── Main layout ─── */
+.main { width: 100%; max-width: 740px; }
+
+/* ─── Section label ─── */
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── Card ─── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: box-shadow .2s;
+}
+
+/* ─── Tabs ─── */
+.tab-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  font-family: 'DM Mono', monospace;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all .15s;
+  border-right: 1px solid var(--border);
+}
+.tab-btn:last-child { border-right: none; }
+.tab-btn.active {
+  background: var(--ink);
+  color: #fff;
+}
+.tab-btn:not(.active):hover { background: var(--bg); color: var(--ink2); }
+
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ─── Textarea ─── */
+textarea {
+  width: 100%;
+  min-height: 160px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: 'Noto Serif KR', serif;
+  font-size: .95rem;
+  line-height: 1.8;
+  padding: 14px 16px;
+  resize: vertical;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+textarea::placeholder { color: var(--ink3); }
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200,75,47,.08);
+}
+
+.char-counter {
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem;
+  color: var(--ink3);
+  text-align: right;
+  margin-top: 6px;
+}
+.char-counter span { color: var(--accent); }
+
+/* ─── Drop zone ─── */
+.drop-zone {
+  background: var(--bg);
+  border: 2px dashed var(--border2);
+  border-radius: 8px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.drop-zone input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.drop-icon { font-size: 2.2rem; margin-bottom: 12px; display: block; }
+.drop-text { color: var(--ink2); font-size: .9rem; line-height: 1.6; }
+.drop-text strong { color: var(--accent); }
+.file-loaded {
+  display: none;
+  margin-top: 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: .72rem;
+  color: var(--green);
+}
+.file-loaded.visible { display: block; }
+
+/* ─── Settings grid ─── */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 560px) {
+  .settings-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 400px) {
+  .settings-grid { grid-template-columns: 1fr; }
+}
+
+.field label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 8px;
+}
+
+select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--ink);
+  font-family: 'Noto Serif KR', serif;
+  font-size: .84rem;
+  padding: 9px 34px 9px 12px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%239a9690' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  transition: border-color .2s;
+}
+select:focus { border-color: var(--accent); }
+
+/* ─── Range ─── */
+.range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 3px;
+  background: var(--border);
+  border-radius: 3px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 4px rgba(200,75,47,.15);
+}
+.range-val {
+  font-family: 'DM Mono', monospace;
+  font-size: .7rem;
+  color: var(--accent);
+  min-width: 30px;
+  text-align: right;
+}
+
+/* ─── Waveform ─── */
+.waveform-area {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2.5px;
+  height: 56px;
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+.w-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background .4s, height .15s;
+  transform-origin: bottom;
+}
+@keyframes wv {
+  0%, 100% { transform: scaleY(.3); }
+  50%       { transform: scaleY(1); }
+}
+.waveform-area.active .w-bar {
+  background: var(--accent);
+  animation: wv var(--dur) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+/* ─── Player controls ─── */
+.player-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.btn {
+  font-family: 'DM Mono', monospace;
+  font-size: .7rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 12px 22px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all .18s;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.btn:disabled { opacity: .4; pointer-events: none; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+  flex: 1;
+  justify-content: center;
+}
+.btn-primary:hover {
+  background: var(--accent2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(200,75,47,.3);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-outline {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--ink2);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-dl {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--green);
+  display: none;
+}
+.btn-dl.visible { display: inline-flex; }
+.btn-dl:hover { border-color: var(--green); background: rgba(45,122,79,.05); }
+
+/* ─── Progress ─── */
+.progress-track {
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 14px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width .25s linear;
+}
+
+/* ─── Status ─── */
+.status-text {
+  font-family: 'DM Mono', monospace;
+  font-size: .68rem;
+  color: var(--ink3);
+  text-align: center;
+  margin-top: 12px;
+  min-height: 18px;
+  transition: color .3s;
+}
+.status-text.loading { color: var(--accent); }
+.status-text.playing { color: var(--accent); }
+.status-text.done    { color: var(--green); }
+.status-text.error   { color: #c0392b; }
+
+/* ─── Notice box ─── */
+.notice {
+  background: var(--accent-bg);
+  border: 1px solid rgba(200,75,47,.2);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: .82rem;
+  color: var(--ink2);
+  line-height: 1.7;
+  margin-top: 4px;
+}
+.notice code {
+  font-family: 'DM Mono', monospace;
+  font-size: .75rem;
+  background: rgba(200,75,47,.1);
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.notice a { color: var(--accent); }
+
+/* ─── Footer ─── */
+footer {
+  width: 100%;
+  max-width: 740px;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem;
+  letter-spacing: .06em;
+  color: var(--ink3);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ─── Loading spinner on button ─── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin-icon { display: inline-block; animation: spin .7s linear infinite; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Voice<em>Craft</em></div>
+  <span class="badge">Microsoft Neural TTS</span>
+</header>
+
+<main class="main">
+
+  <!-- ① 텍스트 입력 -->
+  <div class="section-label">01 · 텍스트 입력</div>
+  <div class="card">
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab(event,'type')">직접 입력</button>
+      <button class="tab-btn" onclick="switchTab(event,'file')">파일 업로드</button>
+    </div>
+
+    <div id="tab-type" class="tab-pane active">
+      <textarea id="text-input"
+        placeholder="여기에 한국어 텍스트를 입력하세요..."
+        maxlength="10000"
+        oninput="updateCounter()"></textarea>
+      <div class="char-counter"><span id="char-count">0</span> / 10,000자</div>
+    </div>
+
+    <div id="tab-file" class="tab-pane">
+      <div class="drop-zone" id="drop-zone"
+           ondrop="handleDrop(event)"
+           ondragover="handleDragOver(event)"
+           ondragleave="handleDragLeave()">
+        <input type="file" accept=".txt" onchange="handleFileSelect(event)">
+        <span class="drop-icon">📄</span>
+        <p class="drop-text">
+          <strong>.txt 파일</strong>을 드래그하거나<br>클릭하여 선택하세요 (UTF-8)
+        </p>
+        <div class="file-loaded" id="file-name"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 음성 설정 -->
+  <div class="section-label">02 · 음성 설정</div>
+  <div class="card">
+    <div class="settings-grid">
+
+      <div class="field" style="grid-column: span 1">
+        <label>언어</label>
+        <select id="lang-select" onchange="updateVoices()">
+          <option value="ko">한국어</option>
+          <option value="en">영어</option>
+          <option value="ja">일본어</option>
+          <option value="zh">중국어</option>
+        </select>
+      </div>
+
+      <div class="field" style="grid-column: span 2">
+        <label>음성</label>
+        <select id="voice-select"></select>
+      </div>
+
+      <div class="field">
+        <label>읽기 속도</label>
+        <div class="range-wrap">
+          <input type="range" id="rate" min="0.5" max="2" step="0.05" value="1"
+                 oninput="document.getElementById('rate-val').textContent=this.value">
+          <span class="range-val" id="rate-val">1</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>음조</label>
+        <div class="range-wrap">
+          <input type="range" id="pitch" min="0.5" max="2" step="0.05" value="1"
+                 oninput="document.getElementById('pitch-val').textContent=this.value">
+          <span class="range-val" id="pitch-val">1</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ③ 재생 -->
+  <div class="section-label">03 · 재생 &amp; 다운로드</div>
+  <div class="card">
+    <!-- Waveform -->
+    <div class="waveform-area" id="waveform"></div>
+
+    <div class="player-controls">
+      <button class="btn btn-primary" id="btn-convert" onclick="convert()">
+        ▶&nbsp; 음성 변환 시작
+      </button>
+      <button class="btn btn-outline" id="btn-stop" onclick="stopAudio()" disabled>
+        ■&nbsp; 정지
+      </button>
+      <a class="btn btn-dl" id="btn-dl" download="speech.mp3">
+        ↓&nbsp; MP3 다운로드
+      </a>
+    </div>
+
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="status-text" id="status">텍스트를 입력 후 변환 버튼을 누르세요.</div>
+  </div>
+
+  <!-- Notice -->
+  <div class="notice">
+    🔑 이 사이트는 <strong>Azure Cognitive Services TTS</strong>를 사용합니다.
+    Cloudflare Dashboard → Pages → Settings → Environment Variables 에서
+    <code>AZURE_TTS_KEY</code>와 <code>AZURE_REGION</code>을 설정하세요.
+    무료 티어: <strong>월 500만 자</strong> · 한국어 Neural 음성 지원.
+  </div>
+
+</main>
+
+<footer>
+  <span>VoiceCraft · Microsoft Azure Neural TTS</span>
+  <span>Powered by Cloudflare Pages</span>
+</footer>
+
+<script>
+// ─── Voice map ────────────────────────────────────────────────────────────────
+const VOICES = {
+  ko: [
+    { id: "ko-KR-SunHiNeural",    label: "선희 (여성, 표준)" },
+    { id: "ko-KR-InJoonNeural",   label: "인준 (남성, 표준)" },
+    { id: "ko-KR-BongJinNeural",  label: "봉진 (남성)" },
+    { id: "ko-KR-GookMinNeural",  label: "국민 (남성)" },
+    { id: "ko-KR-JiMinNeural",    label: "지민 (여성)" },
+    { id: "ko-KR-SeoHyeonNeural", label: "서현 (여성)" },
+    { id: "ko-KR-SoonBokNeural",  label: "순복 (여성)" },
+    { id: "ko-KR-YuJinNeural",    label: "유진 (여성)" },
+  ],
+  en: [
+    { id: "en-US-JennyNeural", label: "Jenny (Female)" },
+    { id: "en-US-GuyNeural",   label: "Guy (Male)" },
+  ],
+  ja: [
+    { id: "ja-JP-NanamiNeural", label: "ななみ (女性)" },
+    { id: "ja-JP-KeitaNeural",  label: "けいた (男性)" },
+  ],
+  zh: [
+    { id: "zh-CN-XiaoxiaoNeural", label: "晓晓 (女)" },
+    { id: "zh-CN-YunxiNeural",    label: "云希 (男)" },
+  ],
+};
+
+function updateVoices() {
+  const lang = document.getElementById('lang-select').value;
+  const sel = document.getElementById('voice-select');
+  sel.innerHTML = '';
+  (VOICES[lang] || []).forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.id;
+    opt.textContent = v.label;
+    sel.appendChild(opt);
+  });
+}
+updateVoices();
+
+// ─── Waveform ─────────────────────────────────────────────────────────────────
+(function buildWave() {
+  const container = document.getElementById('waveform');
+  const profile = [4,6,9,13,18,22,28,34,38,42,46,50,46,42,38,34,30,26,22,18,
+                   22,26,30,34,38,42,46,42,38,34,28,22,18,13,9,6,4,3,3,4];
+  profile.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'w-bar';
+    bar.style.height = h + 'px';
+    bar.style.setProperty('--dur', (.45 + Math.random() * .35).toFixed(2) + 's');
+    bar.style.setProperty('--delay', (i * .03).toFixed(2) + 's');
+    container.appendChild(bar);
+  });
+})();
+
+function setWave(active) {
+  document.getElementById('waveform').classList.toggle('active', active);
+}
+
+// ─── Tab ─────────────────────────────────────────────────────────────────────
+function switchTab(e, name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  e.target.classList.add('active');
+  stopAudio();
+}
+
+// ─── Character counter ────────────────────────────────────────────────────────
+function updateCounter() {
+  document.getElementById('char-count').textContent =
+    document.getElementById('text-input').value.length;
+}
+
+// ─── File upload ─────────────────────────────────────────────────────────────
+let fileText = '';
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.add('drag-over');
+}
+function handleDragLeave() {
+  document.getElementById('drop-zone').classList.remove('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  handleDragLeave();
+  const f = e.dataTransfer.files[0];
+  if (f) readFile(f);
+}
+function handleFileSelect(e) {
+  const f = e.target.files[0];
+  if (f) readFile(f);
+}
+function readFile(file) {
+  if (!file.name.toLowerCase().endsWith('.txt')) {
+    setStatus('.txt 파일만 지원합니다.', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    fileText = ev.target.result;
+    const el = document.getElementById('file-name');
+    el.textContent = `✓ ${file.name}  (${fileText.length.toLocaleString()}자)`;
+    el.classList.add('visible');
+    setStatus('파일 로드 완료. 변환 버튼을 누르세요.', 'done');
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentAudio = null;
+let currentBlobUrl = null;
+
+function getInputText() {
+  const active = document.querySelector('.tab-pane.active').id;
+  return active === 'tab-type'
+    ? document.getElementById('text-input').value.trim()
+    : fileText.trim();
+}
+
+// ─── Convert & play ───────────────────────────────────────────────────────────
+async function convert() {
+  const text = getInputText();
+  if (!text) {
+    setStatus('텍스트를 입력하거나 파일을 선택해주세요.', 'error');
+    return;
+  }
+
+  stopAudio();
+  setBtnState(true);
+  setStatus('음성 합성 중... 잠시 기다려 주세요.', 'loading');
+  setProgress(0);
+  document.getElementById('btn-dl').classList.remove('visible');
+
+  // Fake progress while waiting
+  let fakeP = 0;
+  const fakeTimer = setInterval(() => {
+    fakeP = Math.min(fakeP + Math.random() * 8, 85);
+    setProgress(fakeP);
+  }, 300);
+
+  try {
+    const res = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        voice: document.getElementById('voice-select').value,
+        rate:  parseFloat(document.getElementById('rate').value),
+        pitch: parseFloat(document.getElementById('pitch').value),
+      }),
+    });
+
+    clearInterval(fakeTimer);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(errData.error || `HTTP ${res.status}`);
+    }
+
+    setProgress(90);
+    const blob = await res.blob();
+    currentBlobUrl = URL.createObjectURL(blob);
+
+    // Set up download button
+    const dlBtn = document.getElementById('btn-dl');
+    dlBtn.href = currentBlobUrl;
+    dlBtn.classList.add('visible');
+
+    // Play audio
+    currentAudio = new Audio(currentBlobUrl);
+
+    currentAudio.addEventListener('timeupdate', () => {
+      const pct = (currentAudio.currentTime / currentAudio.duration) * 100;
+      setProgress(pct);
+    });
+
+    currentAudio.addEventListener('ended', () => {
+      setWave(false);
+      setProgress(100);
+      setStatus('재생 완료 ✓  —  MP3 다운로드 버튼을 눌러 저장할 수 있습니다.', 'done');
+      document.getElementById('btn-stop').disabled = true;
+    });
+
+    currentAudio.addEventListener('error', () => {
+      setWave(false);
+      setStatus('오디오 재생 오류', 'error');
+      document.getElementById('btn-stop').disabled = true;
+    });
+
+    await currentAudio.play();
+    setWave(true);
+    document.getElementById('btn-stop').disabled = false;
+    setStatus('재생 중...', 'playing');
+
+  } catch (err) {
+    clearInterval(fakeTimer);
+    setWave(false);
+    setBtnState(false);
+    setProgress(0);
+    setStatus('오류: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+function stopAudio() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  setWave(false);
+  setProgress(0);
+  document.getElementById('btn-stop').disabled = true;
+}
+
+// ─── UI helpers ──────────────────────────────────────────────────────────────
+function setBtnState(loading) {
+  const btn = document.getElementById('btn-convert');
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<span class="spin-icon">⟳</span>&nbsp; 변환 중...'
+    : '▶&nbsp; 음성 변환 시작';
+}
+
+function setProgress(pct) {
+  document.getElementById('progress-fill').style.width = Math.min(100, pct) + '%';
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status-text ' + (cls || '');
+}
+</script>
+</body>
+</html>
