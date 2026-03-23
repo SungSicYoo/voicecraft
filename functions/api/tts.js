@@ -33,12 +33,6 @@ export async function onRequestPost(context) {
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
-  if (text.length > 5000) {
-    return new Response(JSON.stringify({ error: "텍스트가 너무 깁니다. (무료 API는 최대 5,000자 권장)" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
-  }
 
   const lang = voice; // e.g. "ko", "en", "ja"
 
