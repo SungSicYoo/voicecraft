@@ -460,7 +460,7 @@ footer {
 
 <header class="site-header">
   <div class="logo">Voice<em>Craft</em></div>
-  <span class="badge">Microsoft Neural TTS</span>
+  <span class="badge">Free TTS API</span>
 </header>
 
 <main class="main">
@@ -516,23 +516,7 @@ footer {
         <select id="voice-select"></select>
       </div>
 
-      <div class="field">
-        <label>읽기 속도</label>
-        <div class="range-wrap">
-          <input type="range" id="rate" min="0.5" max="2" step="0.05" value="1"
-                 oninput="document.getElementById('rate-val').textContent=this.value">
-          <span class="range-val" id="rate-val">1</span>
-        </div>
-      </div>
 
-      <div class="field">
-        <label>음조</label>
-        <div class="range-wrap">
-          <input type="range" id="pitch" min="0.5" max="2" step="0.05" value="1"
-                 oninput="document.getElementById('pitch-val').textContent=this.value">
-          <span class="range-val" id="pitch-val">1</span>
-        </div>
-      </div>
 
     </div>
   </div>
@@ -566,35 +550,17 @@ footer {
 </main>
 
 <footer>
-  <span>VoiceCraft · Microsoft Azure Neural TTS</span>
+  <span>VoiceCraft · Free TTS (No Login Required)</span>
   <span>Powered by Cloudflare Pages</span>
 </footer>
 
 <script>
 // ─── Voice map ────────────────────────────────────────────────────────────────
 const VOICES = {
-  ko: [
-    { id: "ko-KR-SunHiNeural",    label: "선희 (여성, 표준)" },
-    { id: "ko-KR-InJoonNeural",   label: "인준 (남성, 표준)" },
-    { id: "ko-KR-BongJinNeural",  label: "봉진 (남성)" },
-    { id: "ko-KR-GookMinNeural",  label: "국민 (남성)" },
-    { id: "ko-KR-JiMinNeural",    label: "지민 (여성)" },
-    { id: "ko-KR-SeoHyeonNeural", label: "서현 (여성)" },
-    { id: "ko-KR-SoonBokNeural",  label: "순복 (여성)" },
-    { id: "ko-KR-YuJinNeural",    label: "유진 (여성)" },
-  ],
-  en: [
-    { id: "en-US-JennyNeural", label: "Jenny (Female)" },
-    { id: "en-US-GuyNeural",   label: "Guy (Male)" },
-  ],
-  ja: [
-    { id: "ja-JP-NanamiNeural", label: "ななみ (女性)" },
-    { id: "ja-JP-KeitaNeural",  label: "けいた (男性)" },
-  ],
-  zh: [
-    { id: "zh-CN-XiaoxiaoNeural", label: "晓晓 (女)" },
-    { id: "zh-CN-YunxiNeural",    label: "云希 (男)" },
-  ],
+  ko: [ { id: "ko", label: "한국어" } ],
+  en: [ { id: "en", label: "영어" } ],
+  ja: [ { id: "ja", label: "일본어" } ],
+  zh: [ { id: "zh-CN", label: "중국어" } ],
 };
 
 function updateVoices() {
@@ -719,8 +685,6 @@ async function convert() {
       body: JSON.stringify({
         text,
         voice: document.getElementById('voice-select').value,
-        rate:  parseFloat(document.getElementById('rate').value),
-        pitch: parseFloat(document.getElementById('pitch').value),
       }),
     });
 

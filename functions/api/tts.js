@@ -1,54 +1,12 @@
 /**
  * Cloudflare Pages Function
  * POST /api/tts
- *
- * Environment variables (Cloudflare Dashboard → Settings → Variables):
- *   AZURE_TTS_KEY    — Azure Cognitive Services Speech API 키
- *   AZURE_REGION     — 리전 (예: koreacentral, eastasia, japaneast)
+ * 
+ * Uses Google Translate Free TTS (No API Key Required)
  */
 
-const ALLOWED_VOICES = new Set([
-  "ko-KR-SunHiNeural",
-  "ko-KR-InJoonNeural",
-  "ko-KR-BongJinNeural",
-  "ko-KR-GookMinNeural",
-  "ko-KR-JiMinNeural",
-  "ko-KR-SeoHyeonNeural",
-  "ko-KR-SoonBokNeural",
-  "ko-KR-YuJinNeural",
-  "en-US-JennyNeural",
-  "en-US-GuyNeural",
-  "ja-JP-NanamiNeural",
-  "ja-JP-KeitaNeural",
-  "zh-CN-XiaoxiaoNeural",
-  "zh-CN-YunxiNeural",
-]);
-
-function escapeXml(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
-function buildSsml(text, voice, rate, pitch) {
-  const lang = voice.split("-").slice(0, 2).join("-");
-  const rateStr = rate >= 1 ? `+${Math.round((rate - 1) * 100)}%` : `-${Math.round((1 - rate) * 100)}%`;
-  const pitchStr = pitch >= 1 ? `+${Math.round((pitch - 1) * 50)}%` : `-${Math.round((1 - pitch) * 50)}%`;
-
-  return `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='${lang}'>
-  <voice name='${voice}'>
-    <prosody rate='${rateStr}' pitch='${pitchStr}'>
-      ${escapeXml(text)}
-    </prosody>
-  </voice>
-</speak>`;
-}
-
 export async function onRequestPost(context) {
-  const { request, env } = context;
+  const { request } = context;
 
   // CORS preflight
   const corsHeaders = {
@@ -67,73 +25,79 @@ export async function onRequestPost(context) {
     });
   }
 
-  const { text, voice = "ko-KR-SunHiNeural", rate = 1, pitch = 1 } = body;
+  const { text, voice = "ko" } = body;
 
-  // Validation
   if (!text || typeof text !== "string" || text.trim().length === 0) {
     return new Response(JSON.stringify({ error: "텍스트가 비어있습니다." }), {
       status: 400,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
-  if (text.length > 10000) {
-    return new Response(JSON.stringify({ error: "텍스트가 너무 깁니다. (최대 10,000자)" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
-  }
-  if (!ALLOWED_VOICES.has(voice)) {
-    return new Response(JSON.stringify({ error: "허용되지 않은 음성입니다." }), {
+  if (text.length > 5000) {
+    return new Response(JSON.stringify({ error: "텍스트가 너무 깁니다. (무료 API는 최대 5,000자 권장)" }), {
       status: 400,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
-  const apiKey = env.AZURE_TTS_KEY;
-  const region = env.AZURE_REGION || "koreacentral";
+  const lang = voice; // e.g. "ko", "en", "ja"
 
-  if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: "서버 설정 오류: AZURE_TTS_KEY가 설정되지 않았습니다." }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+  // Google TTS requires chunks of < 200 chars.
+  const chunks = [];
+  const words = text.split(/([,.\n?!]+)/);
+  let currentChunk = "";
+
+  for (const part of words) {
+    if (!part.trim()) {
+      currentChunk += part;
+      continue;
+    }
+    if ((currentChunk + part).length > 180) {
+      if (currentChunk.trim()) chunks.push(currentChunk.trim());
+      currentChunk = part;
+    } else {
+      currentChunk += part;
+    }
+  }
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
   }
 
-  const ssml = buildSsml(text.trim(), voice, parseFloat(rate), parseFloat(pitch));
+  const audioBuffers = [];
 
-  let azureRes;
   try {
-    azureRes = await fetch(
-      `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`,
-      {
-        method: "POST",
+    for (const chunk of chunks) {
+      if (!chunk) continue;
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=${lang}&client=tw-ob`;
+      const res = await fetch(url, {
         headers: {
-          "Ocp-Apim-Subscription-Key": apiKey,
-          "Content-Type": "application/ssml+xml",
-          "X-Microsoft-OutputFormat": "audio-24khz-160kbitrate-mono-mp3",
-          "User-Agent": "VoiceCraft/1.0",
-        },
-        body: ssml,
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          "Referer": "https://translate.google.com/"
+        }
+      });
+      if (!res.ok) {
+        throw new Error(`Google TTS API 연동 오류 (${res.status})`);
       }
-    );
+      const arrayBuffer = await res.arrayBuffer();
+      audioBuffers.push(new Uint8Array(arrayBuffer));
+    }
   } catch (e) {
-    return new Response(
-      JSON.stringify({ error: "Azure TTS 서버 연결 실패: " + e.message }),
-      { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response(JSON.stringify({ error: "TTS 생성 실패: " + e.message }), {
+      status: 502,
+      headers: { "Content-Type": "application/json", ...corsHeaders }
+    });
   }
 
-  if (!azureRes.ok) {
-    const errText = await azureRes.text();
-    return new Response(
-      JSON.stringify({ error: `Azure TTS 오류 (${azureRes.status}): ${errText}` }),
-      { status: azureRes.status, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+  // Concatenate mp3 buffers
+  const totalLength = audioBuffers.reduce((acc, val) => acc + val.length, 0);
+  const resultBuffer = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const buf of audioBuffers) {
+    resultBuffer.set(buf, offset);
+    offset += buf.length;
   }
 
-  const audioBuffer = await azureRes.arrayBuffer();
-
-  return new Response(audioBuffer, {
+  return new Response(resultBuffer.buffer, {
     status: 200,
     headers: {
       "Content-Type": "audio/mpeg",
@@ -144,7 +108,6 @@ export async function onRequestPost(context) {
   });
 }
 
-// OPTIONS preflight
 export async function onRequestOptions() {
   return new Response(null, {
     status: 204,
